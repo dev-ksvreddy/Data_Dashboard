@@ -4,7 +4,7 @@ import pandas as pd
 import plotly
 import plotly.express as px
 import json
-
+import os
 app = Flask(__name__)
 
 # Fetch data function
@@ -87,4 +87,5 @@ def get_paginated_data():
         return jsonify({"message": f"Error fetching paginated data: {e}"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))  # Default to 5000 if PORT not set
+    app.run(host='0.0.0.0', port=port, debug=True)
