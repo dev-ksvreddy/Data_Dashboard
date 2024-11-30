@@ -57,15 +57,17 @@
         const tableBody = document.querySelector("#data-table tbody");
         const paginationDiv = document.querySelector("#pagination");
         const plotTypeDropdown = document.getElementById("plot-type");
-
+    
+        const buttonsPerPage = 10; // Display 10 pagination buttons at a time
+    
         // Render the initial plot
         Plotly.newPlot('plot', graphJSON);
-
+    
         // Fetch and render data for a specific page
         async function fetchAndRenderTable(page = 1) {
             const response = await fetch(`/get-data?page=${page}`);
             const result = await response.json();
-
+    
             if (response.ok) {
                 // Render table
                 tableBody.innerHTML = ""; // Clear previous rows
@@ -74,36 +76,59 @@
                     tr.innerHTML = `<td>${row.Timestamp}</td><td>${row.Vehicle_count}</td>`;
                     tableBody.appendChild(tr);
                 });
-
+    
                 // Render pagination
                 renderPagination(result.total_pages, result.current_page);
             } else {
                 tableBody.innerHTML = `<tr><td colspan="2">${result.message}</td></tr>`;
             }
         }
-
-        // Render pagination buttons
+    
+        // Render pagination buttons (10 at a time)
         function renderPagination(totalPages, currentPage) {
             paginationDiv.innerHTML = ""; // Clear previous buttons
-
-            for (let i = 1; i <= totalPages; i++) {
+    
+            const startPage = Math.floor((currentPage - 1) / buttonsPerPage) * buttonsPerPage + 1;
+            const endPage = Math.min(startPage + buttonsPerPage - 1, totalPages);
+    
+            // Previous block button
+            if (startPage > 1) {
+                const prevButton = document.createElement("button");
+                prevButton.textContent = "←";
+                prevButton.className = "btn btn-secondary btn-sm";
+                prevButton.onclick = () => renderPagination(totalPages, startPage - buttonsPerPage);
+                paginationDiv.appendChild(prevButton);
+            }
+    
+            // Page number buttons
+            for (let i = startPage; i <= endPage; i++) {
                 const button = document.createElement("button");
                 button.textContent = i;
                 button.className = `btn btn-${i === currentPage ? 'primary' : 'secondary'} btn-sm`;
                 button.onclick = () => fetchAndRenderTable(i);
                 paginationDiv.appendChild(button);
             }
+    
+            // Next block button
+            if (endPage < totalPages) {
+                const nextButton = document.createElement("button");
+                nextButton.textContent = "→";
+                nextButton.className = "btn btn-secondary btn-sm";
+                nextButton.onclick = () => renderPagination(totalPages, endPage + 1);
+                paginationDiv.appendChild(nextButton);
+            }
         }
-
+    
         // Update the plot based on the selected type
         function updatePlot() {
             const selectedPlotType = plotTypeDropdown.value;
             const url = `/?plot_type=${selectedPlotType}`;
             window.location.href = url;
         }
-
+    
         // Initial render
         fetchAndRenderTable();
     </script>
+    
 </body>
 </html>
